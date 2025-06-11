@@ -14,7 +14,7 @@ flatbuffers==25.2.10
 fonttools==4.58.2
 gast==0.6.0
 google-auth==2.40.3
-google-auth-oauthlib==0.4.6
+google-auth-oauthlib==1.2.2
 google-pasta==0.2.0
 grpcio==1.73.0
 gunicorn==21.2.0
@@ -22,7 +22,7 @@ h5py==3.14.0
 idna==3.10
 itsdangerous==2.2.0
 Jinja2==3.1.6
-keras==2.8.0
+keras==2.15.0
 Keras-Preprocessing==1.1.2
 kiwisolver==1.4.8
 libclang==18.1.1
@@ -46,11 +46,12 @@ requests-oauthlib==2.0.0
 rsa==4.9.1
 six==1.17.0
 soupsieve==2.7
-tensorboard==2.8.0
-tensorboard-data-server==0.6.1
+tensorboard==2.15.2
+tensorboard-data-server==0.7.2
 tensorboard-plugin-wit==1.8.1
-tensorflow==2.8.0
-tensorflow-estimator==2.8.0
+tensorflow==2.15.0
+tensorflow-estimator==2.15.0
+tensorflow-intel==2.15.0
 tensorflow-io-gcs-filesystem==0.31.0
 termcolor==3.1.0
 tf-estimator-nightly==2.8.0.dev2021122109
