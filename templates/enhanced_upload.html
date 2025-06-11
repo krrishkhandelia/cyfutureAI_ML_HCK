@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScanEnhancer - Medical Scan Analysis</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        /* Additional styling specific to this page */
+        .viewer-box {
+            height: 300px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f8f9fa;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .nav-buttons {
+            margin-top: 15px;
+            text-align: center;
+        }
+        
+        .nav-button {
+            background-color: var(--primary);
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 0 5px;
+            transition: all 0.2s ease;
+        }
+        
+        .nav-button:hover {
+            background-color: #0b5ed7;
+            transform: translateY(-2px);
+        }
+        
+        .scan-gallery {
+            position: relative;
+            min-height: 300px;
+        }
+        
+        /* Styling for zoom control */
+        .zoom-controls {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            z-index: 100;
+            display: flex;
+            gap: 5px;
+        }
+        
+        .zoom-btn {
+            width: 36px;
+            height: 36px;
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid #dee2e6;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1rem;
+            color: var(--primary);
+            transition: all 0.2s ease;
+        }
+        
+        .zoom-btn:hover {
+            background: white;
+            color: #0b5ed7;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="/">
+                <img src="{{ url_for('static', filename='logo.png') }}" alt="DxTech Logo">
+                <span class="fw-bold ms-2">DxTech</span>
+            </a>
+            <a href="/" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>
+                Standard View
+            </a>
+        </div>
+    </nav>
+
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <!-- Alert messages -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category if category != 'error' else 'danger' }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <div class="card shadow-sm border-0">
+                    <div class="card-body p-4">
+                        <h2 class="text-center mb-4 fw-bold text-primary">Medical Scan Analysis</h2>
+                        <p class="text-center text-muted mb-4">Upload your medical scan for enhanced viewing and analysis</p>
+                        
+                        <!-- Scan Type Selection -->
+                        <div class="mb-4">
+                            <p class="form-label fw-semibold">Select scan type:</p>
+                            <div class="d-flex justify-content-center scan-type-container">
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="scan_type" id="oct" value="OCT" required>
+                                    <label class="form-check-label" for="oct">
+                                        <div class="scan-type-icon">
+                                            <i class="fas fa-eye"></i>
+                                        </div>
+                                        <span>OCT Scan</span>
+                                    </label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="scan_type" id="mri" value="MRI">
+                                    <label class="form-check-label" for="mri">
+                                        <div class="scan-type-icon">
+                                            <i class="fas fa-brain"></i>
+                                        </div>
+                                        <span>MRI Scan</span>
+                                    </label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="scan_type" id="xray" value="XRay">
+                                    <label class="form-check-label" for="xray">
+                                        <div class="scan-type-icon">
+                                            <i class="fas fa-x-ray"></i>
+                                        </div>
+                                        <span>X-Ray</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- File Upload Area -->
+                        <form action="/upload" method="post" enctype="multipart/form-data" id="upload-form">
+                            <div class="mb-4">
+                                <div class="upload-area text-center" id="upload-area">
+                                    <input type="file" name="file" id="file-input" accept="image/png, image/jpeg" class="d-none" required>
+                                    <div class="upload-content py-5">
+                                        <i class="fas fa-cloud-upload-alt fa-3x text-primary mb-3"></i>
+                                        <h5>Drag & Drop your scan image</h5>
+                                        <p class="text-muted mb-3">Or click to browse files</p>
+                                        <small class="text-muted">Supported formats: PNG, JPG (Max 10MB)</small>
+                                    </div>
+                                    <div class="file-preview d-none">
+                                        <div class="position-relative">
+                                            <img src="" alt="Preview" id="image-preview" class="img-fluid rounded">
+                                            <button type="button" class="btn-close position-absolute top-0 end-0 m-2 bg-white rounded-circle" id="remove-preview"></button>
+                                        </div>
+                                        <p class="mt-2 mb-0 filename-display"></p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Submit Button -->
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary py-2" id="upload-button" disabled>
+                                    <i class="fas fa-microscope me-2"></i>
+                                    Upload & Analyze Scan
+                                </button>
+                            </div>
+                        </form>
+                        
+                        <!-- Image Viewer (for viewing uploaded images) -->
+                        <div class="viewer-box mt-4">
+                            {% if uploaded_image %}
+                                <div class="scan-gallery">
+                                    <img src="{{ url_for('static', filename='uploads/' + uploaded_image) }}" 
+                                         alt="Uploaded Scan" class="img-fluid scan-image">
+                                    
+                                    <!-- Zoom Controls -->
+                                    <div class="zoom-controls">
+                                        <button class="zoom-btn" id="zoom-in"><i class="fas fa-search-plus"></i></button>
+                                        <button class="zoom-btn" id="zoom-out"><i class="fas fa-search-minus"></i></button>
+                                        <button class="zoom-btn" id="zoom-reset"><i class="fas fa-undo"></i></button>
+                                    </div>
+                                </div>
+                            {% else %}
+                                <div class="text-center text-muted">
+                                    <i class="fas fa-image fa-3x mb-3"></i>
+                                    <p>No image uploaded</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Navigation Buttons -->
+                        {% if uploaded_image %}
+                            <div class="nav-buttons">
+                                <button class="nav-button" id="prev-image">
+                                    <i class="fas fa-arrow-left me-1"></i> Previous
+                                </button>
+                                <button class="nav-button" id="next-image">
+                                    Next <i class="fas fa-arrow-right ms-1"></i>
+                                </button>
+                            </div>
+                        {% endif %}
+                        
+                        <!-- Analysis Results (if available) -->
+                        {% if result %}
+                            <div class="card mt-4">
+                                <div class="card-header bg-primary text-white">
+                                    <h5 class="mb-0">Quick Analysis</h5>
+                                </div>
+                                <div class="card-body">
+                                    <p>{{ result }}</p>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="text-center mt-4">
+                    <p class="text-muted small">
+                        <i class="fas fa-lock me-1"></i>
+                        Your medical scans are processed securely and never shared with third parties.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-light py-4 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6 text-center text-md-start">
+                    <p class="mb-0 text-muted">&copy; 2023 ScanEnhancer. All rights reserved.</p>
+                </div>
+                <div class="col-md-6 text-center text-md-end">
+                    <a href="#" class="text-muted me-3">Privacy Policy</a>
+                    <a href="#" class="text-muted">Terms of Service</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script>
+        // Additional JavaScript for the enhanced viewer
+        document.addEventListener('DOMContentLoaded', function() {
+            // Image navigation functionality
+            const prevButton = document.getElementById('prev-image');
+            const nextButton = document.getElementById('next-image');
+            
+            if (prevButton && nextButton) {
+                // This is a placeholder for gallery navigation
+                // In a real application, this would cycle through available images
+                prevButton.addEventListener('click', function() {
+                    console.log('Previous image requested');
+                    // Functionality would be implemented with server-side support
+                });
+                
+                nextButton.addEventListener('click', function() {
+                    console.log('Next image requested');
+                    // Functionality would be implemented with server-side support
+                });
+            }
+            
+            // Zoom functionality
+            const zoomIn = document.getElementById('zoom-in');
+            const zoomOut = document.getElementById('zoom-out');
+            const zoomReset = document.getElementById('zoom-reset');
+            const scanImage = document.querySelector('.scan-image');
+            
+            if (zoomIn && zoomOut && zoomReset && scanImage) {
+                let scale = 1;
+                
+                zoomIn.addEventListener('click', function() {
+                    scale += 0.1;
+                    updateZoom();
+                });
+                
+                zoomOut.addEventListener('click', function() {
+                    if (scale > 0.5) {
+                        scale -= 0.1;
+                        updateZoom();
+                    }
+                });
+                
+                zoomReset.addEventListener('click', function() {
+                    scale = 1;
+                    updateZoom();
+                });
+                
+                function updateZoom() {
+                    scanImage.style.transform = `scale(${scale})`;
+                }
+            }
+        });
+    </script>
+</body>
+</html>
