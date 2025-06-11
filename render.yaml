@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: cyfuture-ml-app
+    env: python
+    runtime: python-3.10.13
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    region: oregon  
+    plan: free
+    autoDeploy: true
